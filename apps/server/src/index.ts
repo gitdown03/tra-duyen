@@ -3,6 +3,7 @@ import http from 'http';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import path from 'path';
+import fs from 'fs';
 import colyseus from 'colyseus';
 import { WebSocketTransport } from '@colyseus/ws-transport';
 import { createApiRouter } from './api/routes.js';
@@ -47,6 +48,31 @@ app.get('/health', (_req, res) => {
 app.get('/ready', (_req, res) => {
   res.json({ status: 'ready' });
 });
+
+// Production static frontend serving (SPA fallback)
+const candidateWebDirs = [
+  path.resolve(process.cwd(), '../web/dist'),
+  path.resolve(process.cwd(), 'apps/web/dist'),
+  path.resolve(process.cwd(), 'dist/web')
+];
+const webDistDir = candidateWebDirs.find(
+  (dir) => fs.existsSync(dir) && fs.existsSync(path.join(dir, 'index.html'))
+);
+
+if (webDistDir) {
+  app.use(express.static(webDistDir));
+  app.get('*', (req, res, next) => {
+    if (
+      req.path.startsWith('/api') ||
+      req.path.startsWith('/uploads') ||
+      req.path.startsWith('/health') ||
+      req.path.startsWith('/ready')
+    ) {
+      return next();
+    }
+    res.sendFile(path.join(webDistDir, 'index.html'));
+  });
+}
 
 // Create HTTP and Colyseus Game Server
 const httpServer = http.createServer(app);

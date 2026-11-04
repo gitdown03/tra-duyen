@@ -30,9 +30,12 @@ import {
 } from 'lucide-react';
 
 const WS_URL =
-  window.location.protocol === 'https:'
+  import.meta.env.VITE_WS_URL ||
+  (window.location.protocol === 'https:'
     ? `wss://${window.location.host}`
-    : `ws://${window.location.hostname}:3001`;
+    : import.meta.env.DEV
+    ? `ws://${window.location.hostname}:3001`
+    : `ws://${window.location.host}`);
 
 export function App() {
   // Session & User State
