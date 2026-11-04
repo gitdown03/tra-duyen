@@ -53,6 +53,8 @@ app.get('/ready', (_req, res) => {
 const candidateWebDirs = [
   path.resolve(process.cwd(), '../web/dist'),
   path.resolve(process.cwd(), 'apps/web/dist'),
+  path.resolve(process.cwd(), '../apps/web/dist'),
+  '/app/apps/web/dist',
   path.resolve(process.cwd(), 'dist/web')
 ];
 const webDistDir = candidateWebDirs.find(

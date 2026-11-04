@@ -15,6 +15,8 @@ RUN pnpm install --frozen-lockfile
 
 FROM dependencies AS builder
 COPY . .
+# Configure PostgreSQL Prisma schema for production deployment
+RUN cp apps/server/prisma/schema.postgresql.prisma apps/server/prisma/schema.prisma
 RUN pnpm build
 
 FROM base AS runner
