@@ -6,7 +6,8 @@ import { MediaService } from '../modules/media/media.service.js';
 import { SocialService } from '../modules/social/social.service.js';
 import { ProgressionService } from '../modules/progression/progression.service.js';
 import { ModerationService } from '../modules/moderation/moderation.service.js';
-import { matchMaker } from 'colyseus';
+import colyseus from 'colyseus';
+const { matchMaker } = colyseus;
 import {
   GuestRegisterSchema,
   EmailRegisterSchema,

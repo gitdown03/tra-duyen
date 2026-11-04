@@ -3,29 +3,22 @@ import http from 'http';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import path from 'path';
-import { Server } from 'colyseus';
+import colyseus from 'colyseus';
 import { WebSocketTransport } from '@colyseus/ws-transport';
 import { createApiRouter } from './api/routes.js';
 import { TeaRoom } from './rooms/TeaRoom.js';
 
+const { Server } = colyseus;
+
 const app: express.Express = express();
 const port: number = Number(process.env.PORT) || 3001;
 
-// CORS configuration supporting cookies and web client origin
-const allowedOrigins = [
-  process.env.APP_ORIGIN || 'http://localhost:5173',
-  'http://localhost:3000',
-  'http://127.0.0.1:5173'
-];
-
+// Permissive CORS reflecting request origin to support localhost, 127.0.0.1 and mobile LAN testing
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(null, true); // Permissive for local dev
-      }
+      // Allow requests with no origin (like mobile apps, curl) or any origin in dev
+      callback(null, true);
     },
     credentials: true
   })

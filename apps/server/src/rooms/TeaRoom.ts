@@ -1,4 +1,5 @@
-import { Room, Client } from 'colyseus';
+import colyseus, { type Client } from 'colyseus';
+const { Room } = colyseus;
 import { TeaRoomState, PlayerSchema, PairingSchema, ChatMessageSchema } from './schema/TeaRoomState.js';
 import { DuoTableStateMachine } from '@tra-duyen/game-domain';
 import { GroupGatheringStateMachine } from '@tra-duyen/game-domain';
