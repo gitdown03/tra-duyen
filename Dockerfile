@@ -1,6 +1,7 @@
 # Multi-stage Docker build for Trà Duyên v1
 FROM node:22-alpine AS base
 WORKDIR /app
+RUN apk add --no-cache openssl libc6-compat
 RUN npm install -g pnpm
 
 FROM base AS dependencies
@@ -17,6 +18,8 @@ FROM dependencies AS builder
 COPY . .
 # Configure PostgreSQL Prisma schema for production deployment
 RUN cp apps/server/prisma/schema.postgresql.prisma apps/server/prisma/schema.prisma
+# Provide dummy PostgreSQL URL during build so Prisma schema passes getConfig validation
+ENV DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder"
 RUN pnpm build
 
 FROM base AS runner
