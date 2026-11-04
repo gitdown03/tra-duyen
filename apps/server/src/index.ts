@@ -1,0 +1,89 @@
+import express from 'express';
+import http from 'http';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import path from 'path';
+import { Server } from 'colyseus';
+import { WebSocketTransport } from '@colyseus/ws-transport';
+import { createApiRouter } from './api/routes.js';
+import { TeaRoom } from './rooms/TeaRoom.js';
+
+const app: express.Express = express();
+const port: number = Number(process.env.PORT) || 3001;
+
+// CORS configuration supporting cookies and web client origin
+const allowedOrigins = [
+  process.env.APP_ORIGIN || 'http://localhost:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:5173'
+];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(null, true); // Permissive for local dev
+      }
+    },
+    credentials: true
+  })
+);
+
+app.use(cookieParser());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Serve static uploads for avatars
+const uploadDir = process.env.MEDIA_UPLOAD_DIR || path.join(process.cwd(), 'uploads');
+app.use('/uploads', express.static(uploadDir, { maxAge: '1d' }));
+
+// Mount REST API
+app.use('/api', createApiRouter());
+
+// Health & liveness probes (Section 24)
+app.get('/health', (_req, res) => {
+  res.json({
+    status: 'healthy',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.get('/ready', (_req, res) => {
+  res.json({ status: 'ready' });
+});
+
+// Create HTTP and Colyseus Game Server
+const httpServer = http.createServer(app);
+
+const gameServer = new Server({
+  transport: new WebSocketTransport({
+    server: httpServer
+  })
+});
+
+// Register the authoritative TeaRoom
+gameServer.define('tea_room', TeaRoom).enableRealtimeListing();
+
+// Start listening
+httpServer.listen(port, () => {
+  console.log(`🍵 Trà Duyên server đang chạy tại cổng http://localhost:${port}`);
+  console.log(`📡 WebSocket Game Server đã sẵn sàng tại ws://localhost:${port}`);
+});
+
+// Graceful shutdown handling (Section 24)
+const handleGracefulShutdown = async () => {
+  console.log('Đang thực hiện đóng máy chủ an toàn (graceful shutdown)...');
+  await gameServer.gracefullyShutdown();
+  httpServer.close(() => {
+    console.log('Máy chủ HTTP đã đóng hoàn toàn.');
+    process.exit(0);
+  });
+};
+
+process.on('SIGINT', handleGracefulShutdown);
+process.on('SIGTERM', handleGracefulShutdown);
+
+export { app, httpServer, gameServer };

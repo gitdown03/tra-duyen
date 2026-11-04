@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.vite/
+*.log
+.env
+!.env.example
+*.local
+uploads/
+coverage/
+prisma/*.db
+prisma/*.db-journal
+.DS_Store

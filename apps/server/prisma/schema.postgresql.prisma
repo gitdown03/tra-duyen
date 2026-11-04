@@ -1,0 +1,182 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Identity {
+  id                      String    @id @default(uuid())
+  isGuest                 Boolean   @default(false)
+  email                   String?   @unique
+  passwordHash            String?
+  isEmailVerified         Boolean   @default(false)
+  verificationToken       String?
+  verificationTokenExpiry DateTime?
+  resetPasswordToken      String?
+  resetPasswordExpiry     DateTime?
+  isAdmin                 Boolean   @default(false)
+  isBanned                Boolean   @default(false)
+  banReason               String?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  sessions           AuthSession[]
+  profile            PlayerProfile?
+  contactCard        ContactCard?
+  receivedGrants     ContactCardGrant[]  @relation("ReceivedGrants")
+  sentGrants         ContactCardGrant[]  @relation("SentGrants")
+  leafBalance        LeafBalance?
+  rewardLedgers      RewardLedger[]
+  cosmeticOwnerships CosmeticOwnership[]
+  filedReports       ModerationReport[]  @relation("FiledReports")
+  receivedReports    ModerationReport[]  @relation("ReceivedReports")
+  adminLogs          AdminAuditLog[]
+}
+
+model AuthSession {
+  id         String   @id @default(uuid())
+  identityId String
+  token      String   @unique
+  expiresAt  DateTime
+  isRevoked  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  identity Identity @relation(fields: [identityId], references: [id], onDelete: Cascade)
+
+  @@index([identityId])
+}
+
+model PlayerProfile {
+  id                    String   @id @default(uuid())
+  identityId            String   @unique
+  nickname              String
+  pronoun               String   @default("Các hạ")
+  appearanceJson        String
+  bio                   String   @default("Một tách trà thơm đợi bạn hiền.")
+  interestsJson         String   @default("[]")
+  conversationStyle     String   @default("Nhã nhặn, lắng nghe")
+  purpose               String   @default("FRIENDSHIP")
+  allowedIntroTagsJson  String   @default("[]")
+  avatarUrl             String?
+  cityRegion            String?
+  personalBio           String?
+  cityRegionVisibility  String   @default("ONLY_ME")
+  personalBioVisibility String   @default("ONLY_ME")
+  updatedAt             DateTime @updatedAt
+
+  identity Identity @relation(fields: [identityId], references: [id], onDelete: Cascade)
+}
+
+model ContactCard {
+  id                 String   @id @default(uuid())
+  ownerIdentityId    String   @unique
+  encryptedPhone     String?
+  encryptedEmail     String?
+  encryptedZalo      String?
+  encryptedTelegram  String?
+  encryptedSocial    String?
+  updatedAt          DateTime @updatedAt
+
+  identity Identity @relation(fields: [ownerIdentityId], references: [id], onDelete: Cascade)
+}
+
+model ContactCardGrant {
+  id                  String   @id @default(uuid())
+  ownerIdentityId     String
+  recipientIdentityId String
+  sharePhone          Boolean  @default(false)
+  shareEmail          Boolean  @default(false)
+  shareZalo           Boolean  @default(false)
+  shareTelegram       Boolean  @default(false)
+  shareSocial         Boolean  @default(false)
+  note                String?
+  isRevoked           Boolean  @default(false)
+  createdAt           DateTime @default(now())
+
+  owner     Identity @relation("SentGrants", fields: [ownerIdentityId], references: [id], onDelete: Cascade)
+  recipient Identity @relation("ReceivedGrants", fields: [recipientIdentityId], references: [id], onDelete: Cascade)
+
+  @@unique([ownerIdentityId, recipientIdentityId])
+}
+
+model Friendship {
+  id        String   @id @default(uuid())
+  userAId   String
+  userBId   String
+  status    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userAId, userBId])
+}
+
+model Block {
+  id        String   @id @default(uuid())
+  blockerId String
+  blockedId String
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+}
+
+model LeafBalance {
+  id             String @id @default(uuid())
+  identityId     String @unique
+  balance        Int    @default(0)
+  earnedToday    Int    @default(0)
+  lastEarnedDate String @default("")
+
+  identity Identity @relation(fields: [identityId], references: [id], onDelete: Cascade)
+}
+
+model RewardLedger {
+  id          String   @id @default(uuid())
+  identityId  String
+  sessionId   String?
+  amount      Int
+  type        String
+  description String
+  createdAt   DateTime @default(now())
+
+  identity Identity @relation(fields: [identityId], references: [id], onDelete: Cascade)
+  @@index([identityId])
+}
+
+model CosmeticOwnership {
+  id          String   @id @default(uuid())
+  identityId  String
+  itemId      String
+  purchasedAt DateTime @default(now())
+
+  identity Identity @relation(fields: [identityId], references: [id], onDelete: Cascade)
+  @@unique([identityId, itemId])
+}
+
+model ModerationReport {
+  id              String   @id @default(uuid())
+  reporterId      String
+  reportedId      String
+  roomCode        String?
+  reason          String
+  detail          String
+  evidenceSnippet String?
+  status          String   @default("PENDING")
+  createdAt       DateTime @default(now())
+
+  reporter Identity @relation("FiledReports", fields: [reporterId], references: [id], onDelete: Cascade)
+  reported Identity @relation("ReceivedReports", fields: [reportedId], references: [id], onDelete: Cascade)
+}
+
+model AdminAuditLog {
+  id              String   @id @default(uuid())
+  adminIdentityId String
+  action          String
+  targetId        String?
+  reason          String
+  createdAt       DateTime @default(now())
+
+  admin Identity @relation(fields: [adminIdentityId], references: [id], onDelete: Cascade)
+}

@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '3001:3001'
+    environment:
+      - PORT=3001
+      - NODE_ENV=production
+      - DATABASE_URL=postgresql://traduyen:traduyen_secret@postgres:5432/traduyen_db?schema=public
+      - JWT_SECRET=change_this_to_a_long_random_jwt_secret_in_prod
+      - CONTACT_ENCRYPTION_KEY=change_this_to_a_32_character_aes256_key!
+      - MEDIA_UPLOAD_DIR=/app/uploads
+      - APP_ORIGIN=http://localhost:3001
+      - MAIL_PROVIDER=sandbox
+      - ADMIN_INIT_TOKEN=admin_init_secure_token_change_me
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: traduyen
+      POSTGRES_PASSWORD: traduyen_secret
+      POSTGRES_DB: traduyen_db
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  uploads_data:
+  pgdata:

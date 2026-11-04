@@ -1,0 +1,17 @@
+{
+  "name": "tra-duyen",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Trà Duyên - Web game multiplayer giao lưu và nhập vai cổ trang",
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "dev:server": "pnpm --filter @tra-duyen/server dev",
+    "dev:web": "pnpm --filter @tra-duyen/web dev",
+    "dev": "pnpm --parallel dev"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}
