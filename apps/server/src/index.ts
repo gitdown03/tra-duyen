@@ -89,9 +89,9 @@ const gameServer = new Server({
 gameServer.define('tea_room', TeaRoom).enableRealtimeListing();
 
 // Start listening
-httpServer.listen(port, () => {
-  console.log(`🍵 Trà Duyên server đang chạy tại cổng http://localhost:${port}`);
-  console.log(`📡 WebSocket Game Server đã sẵn sàng tại ws://localhost:${port}`);
+httpServer.listen(port, '0.0.0.0', () => {
+  console.log(`🍵 Trà Duyên server đang chạy tại cổng http://0.0.0.0:${port}`);
+  console.log(`📡 WebSocket Game Server đã sẵn sàng tại ws://0.0.0.0:${port}`);
 });
 
 // Graceful shutdown handling (Section 24)
